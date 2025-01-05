@@ -3,11 +3,11 @@ My first attempts are usually done without algorithm research or anything like t
 
 # Plans
 ## Languages
-js
-python
-c#
-java
-go
+- js
+- python
+- c# (and possibly C++ at some point)
+- java
+- go
 
 ## Projects
 1) calculator (command line if no gui options are available)

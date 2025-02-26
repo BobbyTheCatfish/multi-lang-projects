@@ -3,10 +3,10 @@ const stdin = process.stdin;
 stdin.setRawMode( true );
 
 const colors = {
-    blue: "\x1b[34m",
-    red: "\x1b[31m",
+    blue: "\x1b[1;94m",
+    red: "\x1b[1;91m",
     white: "\x1b[0m",
-    green: "\x1b[32m"
+    green: "\x1b[1;92m"
 }
 
 // resume stdin in the parent process (node app won't quit all by itself)
@@ -59,7 +59,7 @@ function logBoard(initial = false, highlights) {
             if (c === 0 && isSelected) str += turnChars[turn]
             else str += turnChars[c]
             return str + " ";
-        }).join("") + "\n"
+        }).join("") + colors.white + "\n"
         process.stdout.write(line)
     }
 }

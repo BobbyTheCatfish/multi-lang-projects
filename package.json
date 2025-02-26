@@ -1,0 +1,23 @@
+{
+  "name": "multi-lang-projects",
+  "version": "1.0.0",
+  "description": "I'm writing some things in a bunch of languages so I can learn them better! Some of these things are related to algorithms, others just random stuff.\r My first attempts are usually done without algorithm research or anything like that and I improve the efficiency as time goes on, so make sure to check out the commit history!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BobbyTheCatfish/multi-lang-projects.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BobbyTheCatfish/multi-lang-projects/issues"
+  },
+  "homepage": "https://github.com/BobbyTheCatfish/multi-lang-projects#readme",
+  "devDependencies": {
+    "@types/node": "^22.13.5"
+  }
+}

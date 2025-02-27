@@ -1,30 +1,16 @@
 // @ts-check
-const stdin = process.stdin;
-stdin.setRawMode( true );
+const { colors, keymap, clearLogs } = require("../../utils-js/utils")
 
-const colors = {
-    blue: "\x1b[1;94m",
-    red: "\x1b[1;91m",
-    white: "\x1b[0m",
-    green: "\x1b[1;92m"
-};
-
-// resume stdin in the parent process (node app won't quit all by itself)
-stdin.resume();
-stdin.setEncoding('utf8');
+process.stdin
+    .setRawMode(true)
+    .resume()
+    .setEncoding("utf-8");
 
 let turn = 1;
 let x = 1;
 let y = 1;
 
-const keys = new Map([
-    ["\u0003", "exit"],
-    ["\u001b[D", "left"],
-    ["\u001b[C", "right"],
-    ["\u001b[A", "up"],
-    ["\u001b[B", "down"],
-    ["\r", "enter"]
-]);
+
 
 const board = [
     [0, 0, 0],
@@ -39,14 +25,7 @@ const turnChars = ["□", "x", "o"];
  * @param {number[][]|null|false} [highlights] 
  */
 function logBoard(initial = false, highlights) {
-    if (!initial) {
-        // clear the board so we can redraw it
-        for (let i = 0; i < 4; i++) {
-            process.stdout.clearLine(0);
-            process.stdout.cursorTo(0);
-            process.stdout.moveCursor(0, -1);
-        }
-    }
+    if (!initial) clearLogs(4);
 
     process.stdout.write(`${colors.white}${turnChars[turn]}'s turn!\n`);
 
@@ -100,8 +79,9 @@ function won() {
 }
 
 // on any data into stdin
-stdin.on('data', (key) => {
-    const input = keys.get(key.toString());
+
+process.stdin.on('data', (key) => {
+    const input = keymap.get(key.toString());
 
     switch (input) {
         case "exit": return process.exit();
@@ -151,3 +131,6 @@ const controls = "\n\nControls:\nUse the arrow keys to move\nPress Enter to make
 console.log(logo);
 console.log(controls);
 logBoard(true);
+
+// hack to let ts-check like me
+module.exports = {}

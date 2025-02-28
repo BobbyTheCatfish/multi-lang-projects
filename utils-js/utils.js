@@ -1,4 +1,5 @@
 // @ts-check
+
 const colors = {
     blue: "\x1b[1;94m",
     red: "\x1b[1;91m",
@@ -14,7 +15,8 @@ const keymap = new Map([
     ["\u001b[A", "up"],
     ["\u001b[B", "down"],
     ["\r", "enter"],
-    ["\b", "back"]
+    ["\b", "back"],
+    ["\x1B", "escape"]
 ]);
 
 /** @param {number} lineCount */

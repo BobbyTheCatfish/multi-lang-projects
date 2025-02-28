@@ -1,22 +1,35 @@
 // @ts-check
 const { colors, keymap, clearLogs } = require("../../utils-js/utils");
+const readline = require("readline");
+const fs = require("fs");
 
+const taskFilePath = "./tasks.json";
+
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: true
+});
 process.stdin
 .setRawMode(true)
 .resume()
 .setEncoding("utf-8");
-
 /**
  * @typedef Task
  * @prop {string} title
  * @prop {number} created
  * @prop {boolean} completed
- * @prop {string} id
  */
 
 /** @type {Task[]} */
 let db = [];
-db = require("./tasks.json");
+
+if (!fs.existsSync(taskFilePath)) {
+    fs.writeFileSync(taskFilePath, "[\n]")
+}
+
+db = require(taskFilePath);
 
 const config = {
     maxPerPage: 25
@@ -28,45 +41,83 @@ let modifying;
 let mode = 0;
 let x = 2;
 let y = 1;
-let pendingStr = "";
 
-/**
- * @param {Buffer<ArrayBufferLike>} [key]
- * @param {number} [prevLines]
-*/
-function del(key, prevLines) {
-    if (!key && prevLines) {
-        clearLogs(prevLines);
-        process.stdout.write("Are you sure you want to delete this note? (y/n)\n")
-    } else if (key) {
-        const mapped = keymap.get(key.toString());
-        if (mapped === "enter" && pendingStr.length > 0) {
-            mode = 0;
-            if (pendingStr.toLowerCase().startsWith("y")) {
-                db = db.filter(d => d.id !== modifying.id)
-            }
-            view("", 2)
-            x = 2;
-            pendingStr = "";
-            return;
-        } else if (mapped === "back") {
-            pendingStr = pendingStr.substring(0, pendingStr.length - 2);
-            process.stdout.moveCursor(-1, 0)
-            process.stdout.clearLine(1)
-        } else if (/[a-z]/i.test(key.toString()[0])) {
-            pendingStr += key;
-            process.stdout.write(key);
-        }
-    }
+function save() {
+    fs.writeFileSync(taskFilePath, JSON.stringify(db, undefined, 2))
 }
 
 /**
- * @param {string} key
+ * @param {number} prevLines
+*/
+function del(prevLines) {
+    clearLogs(prevLines + 1);
+    rl.question("Are you sure you want to delete this note? (y/n)\n", (answer) => {
+        if (answer.toLowerCase().startsWith("y")) {
+            db = db.filter(d => d.created !== modifying.created)
+            save();
+        }
+        x = 2;
+        clearLogs(3);
+        process.stdout.write("\n\n")
+        view(undefined, 0)
+        mode = 0;
+        return;
+    })
+}
+
+/**
+ * @param {number} prevLines
+*/
+function create(prevLines) {
+    clearLogs(prevLines + 1);
+    rl.question("What do you want to call this note? (leave blank to cancel)\n", (answer) => {
+        if (answer) {
+            db.push({
+                completed: false,
+                title: answer,
+                created: Date.now()
+            })
+            save();
+        }
+        x = 2;
+        clearLogs(3);
+        process.stdout.write("\n\n")
+        view(undefined, 0)
+        mode = 0;
+        return;
+    })
+}
+
+/**
+ * @param {number} prevLines
+*/
+function edit(prevLines) {
+    clearLogs(prevLines + 1);
+    rl.question("What do you want to call this note? (leave blank to cancel)\n", (answer) => {
+        if (answer && answer !== modifying.title) {
+            for (let i = 0; i < db.length; i++) {
+                if (db[i].created === modifying.created) {
+                    db[i].title = answer;
+                    break;
+                }
+            }
+        }
+        x = 2;
+        clearLogs(3);
+        process.stdout.write("\n\n")
+        view(undefined, 0)
+        mode = 0;
+        return;
+    })
+    rl.write(modifying.title)
+}
+
+/**
+ * @param {string} [key]
  * @param {number} [prevLines]
  * @param {number} [pageNum]
 */
 function view(key, prevLines, pageNum = 0) {
-    let maxLength = 0;
     const excerpt = db.slice(pageNum * 25, pageNum * 25 + config.maxPerPage - 1);
 
     let maxCols = [
@@ -75,7 +126,7 @@ function view(key, prevLines, pageNum = 0) {
         "NOTE DETAILS".length,
         "STATUS".length
     ];
-    
+
     switch (key) {
         case "left": x = Math.max(0, x - 1); break;
         case "right": x = Math.min(3, x + 1); break;
@@ -85,15 +136,31 @@ function view(key, prevLines, pageNum = 0) {
             if (x === 0) {
                 mode = 3;
                 modifying = excerpt[y - 1];
-                del(undefined, Math.max(3, excerpt.length + 2));
+                del(Math.max(3, excerpt.length + 2));
                 return;
+            } else if (x === 1) {
+                mode = 2;
+                modifying = excerpt[y - 1];
+                edit(Math.max(3, excerpt.length + 2))
+                return;
+            } else if (x === 3) {
+                if (y > Math.max(excerpt.length, 1)) {
+                    mode = 1
+                    create(Math.max(3, excerpt.length + 2))
+                    return;
+                } else {
+                    const mod = excerpt[y - 1]
+                    for (let i = 0; i < db.length; i++) {
+                        if (db[i].created === mod.created) db[i].completed = !mod.completed;
+                    }
+                }
             }
         }
         default: break;
     }
 
     const page = excerpt.map((p, yi) => {
-        if (p.title.length > maxCols[3]) maxCols[3] = p.title.length;
+        if (p.title.length > maxCols[2]) maxCols[2] = p.title.length;
         return ["D", "E", p.title, p.completed ? "☑" : "◻"];
     })
 
@@ -102,13 +169,11 @@ function view(key, prevLines, pageNum = 0) {
     
     if (page.length === 1) {
         page.push(["", "", "NO NOTES", ""]);
-        y = 2;
-        x = 3;
     }
     page.push(["", "", "", "NEW"])
 
     if (prevLines !== undefined) clearLogs(prevLines);
-    else clearLogs(page.length)
+    else clearLogs(page.length + (key === "enter" ? 1 : 0))
 
     for (let yi = 0; yi < page.length; yi++) {
         let str = ""
@@ -125,16 +190,10 @@ process.stdin.on('data', (key) => {
     const keyType = keymap.get(key.toString());
 
     if (keyType === "exit") return process.exit();
-    switch (mode) {
-        case 0: if (keyType) return view(keyType); break;
-        case 1: return create(keyType)
-        case 2: return edit(keyType)
-        case 3: return del(key)
-        default: if (keyType) return view(keyType); break;
-    }
+    if (mode === 0 && keyType) return view(keyType);
 });
 
-view("", 0)
+view(undefined, 0)
 
 // hack to let ts-check like me
 module.exports = {}

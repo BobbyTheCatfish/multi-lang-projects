@@ -1,0 +1,8 @@
+{
+    "sessionSecret": "",
+    "port": 3000,
+    "encryptionToken": "",
+    "frontend": "",
+    "backend": "",
+    "deployFrontent": false
+}

@@ -3,7 +3,7 @@ const { colors, keymap, clearLogs } = require("../../utils-js/utils");
 const readline = require("readline");
 const fs = require("fs");
 
-const taskFilePath = "./tasks.json";
+const taskFilePath = "./tasks-.json";
 
 
 const rl = readline.createInterface({

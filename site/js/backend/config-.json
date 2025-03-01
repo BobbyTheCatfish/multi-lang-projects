@@ -1,0 +1,8 @@
+{
+    "sessionSecret": "beans",
+    "port": 3000,
+    "encryptionToken": "beans",
+    "backend": "http://localhost:3000",
+    "frontend": "http://localhost:3006",
+    "deployFrontent": false
+}
